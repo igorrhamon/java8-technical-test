@@ -75,7 +75,7 @@ public interface IAsyncTokenService {
 
 }
 ```
-**Task:** Provide both implementations of _issueToken_ in terms of _authenticate_ and _requestToken_. By doing that, whoever implements the service will only need to implement _authenticate_ and _requestToken_.
+**Task:** Provide both implementations of _requestToken_ in terms of _authenticate_ and _issueToken_. By doing that, whoever implements the service will only need to implement _authenticate_ and _issueToken_.
 
 ### 2. Service Implementation
 
@@ -83,7 +83,7 @@ Provide an implementation for the following API, which **is different** from the
 ```java
 public interface ISimpleAsyncTokenService {
 
-  default CompletableFuture<UserToken> issueToken(Credentials credentials) {
+  default CompletableFuture<UserToken> requestToken(Credentials credentials) {
     throw new NotImplementedException(); //TODO: Implement this
   }
 
@@ -95,25 +95,25 @@ public interface ISimpleAsyncTokenService {
 We prefer you to use an Actor Model implementation such as [Akka](https://akka.io/), but it's not mandatory. You can use other frameworks like [Spring](https://spring.io/) or any other of your choice.
 
 1. Implement an Actor/Service/Module that:
-   * Validates the *Credentials* and return an instance of a *User*.
-   * The *User* instance will always be returned with a random delay between 0 and 5000 milliseconds.
-   * If the password matches the username in uppercase, the validation is a success, otherwise is a failure. Examples:
-       * username: house , password: HOUSE => Valid credentials.
-       * username: house , password: House => Invalid credentials.
-   * The *userId* of the returned user will be the provided *username*.
-   * This logic has to be encapsulated in a separate Actor/Service/Module.
-    
+    * Validates the *Credentials* and return an instance of a *User*.
+    * The *User* instance will always be returned with a random delay between 0 and 5000 milliseconds.
+    * If the password matches the username in uppercase, the validation is a success, otherwise is a failure. Examples:
+        * username: house , password: HOUSE => Valid credentials.
+        * username: house , password: House => Invalid credentials.
+    * The *userId* of the returned user will be the provided *username*.
+    * This logic has to be encapsulated in a separate Actor/Service/Module.
+
 2. Implement another Actor/Service/Module that:
-   * Returns a *UserToken* for a given *User*.
-   * The *UserToken* instance will always be returned with a random delay between 0 and 5000 milliseconds.
-   * If the *userId* of the provided *User* starts with **A**, the call will fail.
-   * The *token* attribute for the *User Token* will be the concatenation of the *userId* and the current date time in UTC: `yyyy-MM-dd'T'HH:mm:ssZ`.
+    * Returns a *UserToken* for a given *User*.
+    * The *UserToken* instance will always be returned with a random delay between 0 and 5000 milliseconds.
+    * If the *userId* of the provided *User* starts with **A**, the call will fail.
+    * The *token* attribute for the *User Token* will be the concatenation of the *userId* and the current date time in UTC: `yyyy-MM-dd'T'HH:mm:ssZ`.
         * Example: `username: house => house_2017-01-01T10:00:00Z`
-   * This logic has to be encapsulated in a separate Actor/Service/Module.
-   
-3. Implement the *issueToken* function/method from the **SimpleAsyncTokenService** trait/interface in a way that:
-   * Its logic is encapsulated in an Actor/Service/Module.
-   * It makes use of the previously defined actors/services/modules for authenticating users and granting tokens:
+    * This logic has to be encapsulated in a separate Actor/Service/Module.
+
+3. Implement the *requestToken* function/method from the **SimpleAsyncTokenService** trait/interface in a way that:
+    * Its logic is encapsulated in an Actor/Service/Module.
+    * It makes use of the previously defined actors/services/modules for authenticating users and granting tokens:
         * It will first use the validation of the *Credentials* to obtain a *User*.
         * After that it will then use the actor/service/module to obtain a *UserToken*.
         * Finally, returns the *UserToken* to the original caller.
@@ -121,7 +121,7 @@ We prefer you to use an Actor Model implementation such as [Akka](https://akka.i
 **Evaluation** notes:
 
 We're particularly interested on how the actor system (or the service orchestration) is designed and tested, paying special attention to the following aspects:
-* **Simplicity**: Do not over-engineer the solution, simple is better. 
+* **Simplicity**: Do not over-engineer the solution, simple is better.
 * **Threading model** and **Non-Blocking APIs**: How you maximize the usage of the available resources.
 * **Concurrency**: How concurrent requests are handled to maximize the performance.
 * **Testing**: How you design the tests in order to increase the coverage.
@@ -129,8 +129,8 @@ We're particularly interested on how the actor system (or the service orchestrat
 
 > **Keep in mind:**
 > * As the implementation is intended to serve multiple concurrent requests!!!
->
->      The fact that a computation might take 5 seconds should not prevent other computations to happen during that time.
+    >
+    >      The fact that a computation might take 5 seconds should not prevent other computations to happen during that time.
 > * How to model/handle the failures.
 
 ### 3. REST API
